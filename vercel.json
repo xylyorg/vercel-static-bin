@@ -1,8 +1,4 @@
 {
-  "name": "now-static-bin-examples",
-  "alias": "now-static-bin-examples",
-  "public": true,
-  "version": 2,
   "builds": [
     {
       "src": "examples/bintry/main.exe",
@@ -34,7 +30,10 @@
       }
     }
   ],
-  "routes": [
-    {"src": "^/go-graphql", "dest": "/examples/go-graphql/main.exe"}
+  "rewrites": [
+    {
+      "source": "^/go-graphql",
+      "destination": "/examples/go-graphql/main.exe"
+    }
   ]
 }

@@ -1,4 +1,4 @@
 /launcher
 /examples
-now.json
-.nowignore
+vercel.json
+.vercelignore

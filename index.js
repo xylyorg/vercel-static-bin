@@ -1,8 +1,7 @@
 const crypto = require('crypto');
 const path = require('path');
-const { createLambda } = require('@now/build-utils/lambda.js');
-const glob = require('@now/build-utils/fs/glob.js');
-const rename = require('@now/build-utils/fs/rename.js');
+const { createLambda } = require('@vercel/build-utils/lambda.js');
+const glob = require('@vercel/build-utils/fs/glob.js');
 const objectHash = require('object-hash');
 
 exports.analyze = ({ files, entrypoint, config }) => {
@@ -17,22 +16,32 @@ exports.analyze = ({ files, entrypoint, config }) => {
 };
 
 exports.build = async ({ files, entrypoint, config }) => {
-  // move all user code to 'user' subdirectory
-  const userFiles = rename(files, name => path.join('user', name));
   const launcherFiles = await glob('**', path.join(__dirname, 'dist'));
-  const zipFiles = { ...userFiles, ...launcherFiles };
+  const zipFiles = { ...files, ...launcherFiles };
 
-  const { port, timeout } = Object.assign(
-    { port: 8080, timeout: 50 },
+  const { port, timeout, cmds } = Object.assign(
+    {
+      port: 8080,
+      timeout: 5000,
+      cmds: [["true"]]
+    },
     config || {},
   );
+  const process = require('child_process');
+
+  for (var i = 0; i < cmds.length; i++) {
+    var cmd = cmds[i].shift();
+    if (!cmd) {
+      process.spawn(cmd, cmds[i], { stdio: 'inherit' })
+    }
+  }
 
   const lambda = await createLambda({
     files: zipFiles,
     handler: 'launcher',
     runtime: 'go1.x',
     environment: {
-      NOW_STATIC_BIN_LOCATION: path.join('user', entrypoint),
+      NOW_STATIC_BIN_LOCATION: entrypoint,
       NOW_STATIC_BIN_PORT: '' + port,
       NOW_STATIC_BIN_TIMEOUT: '' + timeout,
     },
